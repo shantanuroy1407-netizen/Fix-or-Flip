@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cashify FixOrFlip</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:     #0A1628;
+    --navyMid:  #111E35;
+    --navyCard: #162040;
+    --navyBorder: #1E2E50;
+    --teal:     #00BFA5;
+    --tealDim:  #00897B;
+    --tealGlow: rgba(0,191,165,0.12);
+    --amber:    #FF9800;
+    --amberDim: #E65100;
+    --amberGlow:rgba(255,152,0,0.12);
+    --red:      #F44336;
+    --redGlow:  rgba(244,67,54,0.12);
+    --green:    #00E676;
+    --greenGlow:rgba(0,230,118,0.12);
+    --white:    #FFFFFF;
+    --slate:    #B0BEC5;
+    --grey:     #607D8B;
+    --greyDim:  #263850;
+    --greyBorder:#1E3050;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--navy);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 0 0 60px;
+    color: var(--white);
+  }
+
+  .app {
+    width: 100%;
+    max-width: 430px;
+    padding: 0 16px;
+    position: relative;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 24px;
+    position: sticky;
+    top: 0;
+    background: var(--navy);
+    z-index: 10;
+    border-bottom: 1px solid var(--navyBorder);
+    margin-bottom: 24px;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--teal), var(--tealDim));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; }
+  .brand-sub  { font-size: 10px; color: var(--grey); letter-spacing: 0.05em; margin-top: 1px; }
+  .step-label { font-size: 11px; color: var(--grey); }
+
+  /* PROGRESS */
+  .progress-bar {
+    display: flex; gap: 4px; margin-bottom: 22px;
+  }
+  .progress-seg {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: var(--greyDim);
+    transition: background 0.4s ease;
+  }
+  .progress-seg.active { background: var(--teal); }
+
+  /* SCREEN WRAPPER */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* TYPOGRAPHY */
+  .eyebrow {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: var(--tealGlow);
+    border: 1px solid rgba(0,191,165,0.25);
+    border-radius: 20px; padding: 3px 10px;
+    margin-bottom: 10px;
+  }
+  .eyebrow.amber { color: var(--amber); background: var(--amberGlow); border-color: rgba(255,152,0,0.25); }
+  .eyebrow.green { color: var(--green); background: var(--greenGlow); border-color: rgba(0,230,118,0.25); }
+  .eyebrow.red   { color: var(--red);   background: var(--redGlow);   border-color: rgba(244,67,54,0.25); }
+
+  h2 { font-size: 22px; font-weight: 800; line-height: 1.25; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: var(--slate); line-height: 1.5; margin-bottom: 22px; }
+
+  /* CARDS */
+  .card {
+    background: var(--navyCard);
+    border: 1.5px solid var(--navyBorder);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .card:hover { border-color: var(--grey); }
+  .card.selected {
+    background: var(--tealGlow);
+    border-color: var(--teal);
+  }
+  .card.selected .card-title { color: var(--teal); }
+
+  .card-brand { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; color: var(--grey); margin-bottom: 3px; }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--white); transition: color 0.18s; }
+  .card-sub   { font-size: 11px; color: var(--grey); margin-top: 3px; }
+  .card-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--teal); color: var(--navy);
+    display: none; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; flex-shrink: 0;
+  }
+  .card.selected .card-check { display: flex; }
+
+  /* GRID 2 COL */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+
+  /* DAMAGE CARDS */
+  .damage-card {
+    background: var(--navyCard);
+    border: 1.5px solid var(--navyBorder);
+    border-radius: 12px; padding: 14px 16px;
+    cursor: pointer; transition: all 0.18s;
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 8px;
+  }
+  .damage-card:hover { border-color: var(--grey); }
+  .damage-card.selected { background: var(--tealGlow); border-color: var(--teal); }
+  .damage-card.selected .damage-name { color: var(--teal); }
+  .damage-icon { font-size: 22px; flex-shrink: 0; }
+  .damage-name { font-size: 14px; font-weight: 700; color: var(--white); transition: color 0.18s; }
+  .damage-cost { font-size: 11px; color: var(--grey); margin-top: 2px; }
+
+  /* OPTION CARDS */
+  .option-card {
+    background: var(--navyCard);
+    border: 1.5px solid var(--navyBorder);
+    border-radius: 12px; padding: 16px;
+    cursor: pointer; transition: all 0.18s;
+    margin-bottom: 10px;
+  }
+  .option-card:hover { border-color: var(--grey); }
+  .option-card.recommended {
+    background: linear-gradient(135deg, rgba(0,191,165,0.12), rgba(0,191,165,0.05));
+    border-color: var(--teal);
+  }
+  .option-header {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
+  }
+  .option-left { display: flex; align-items: center; gap: 10px; }
+  .option-icon { font-size: 22px; }
+  .option-name { font-size: 14px; font-weight: 700; color: var(--white); }
+  .option-time { font-size: 11px; color: var(--grey); margin-top: 2px; }
+  .option-amount { font-size: 16px; font-weight: 800; color: var(--white); text-align: right; }
+  .option-card.recommended .option-name,
+  .option-card.recommended .option-amount { color: var(--teal); }
+  .option-divider { border: none; border-top: 1px solid var(--navyBorder); margin: 10px 0; }
+  .option-bestfor { font-size: 11px; color: var(--grey); }
+
+  /* REPAIR CHECK */
+  .repair-check {
+    border-radius: 14px; padding: 18px; margin-bottom: 18px;
+    border: 1.5px solid;
+  }
+  .repair-check.poor   { background: var(--redGlow);   border-color: rgba(244,67,54,0.3); }
+  .repair-check.marginal{background: var(--amberGlow); border-color: rgba(255,152,0,0.3); }
+  .repair-check.strong { background: var(--greenGlow); border-color: rgba(0,230,118,0.3); }
+
+  .rc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .rc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); }
+  .rc-verdict { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .rc-icon {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; flex-shrink: 0;
+    border: 2px solid;
+  }
+  .poor   .rc-icon { background: var(--redGlow);   border-color: var(--red);   color: var(--red); }
+  .marginal .rc-icon{background: var(--amberGlow); border-color: var(--amber); color: var(--amber);}
+  .strong .rc-icon { background: var(--greenGlow); border-color: var(--green); color: var(--green);}
+  .rc-verdict-text { font-size: 15px; font-weight: 800; }
+  .poor   .rc-verdict-text { color: var(--red); }
+  .marginal .rc-verdict-text{color: var(--amber);}
+  .strong .rc-verdict-text { color: var(--green);}
+  .rc-reasons { display: flex; flex-direction: column; gap: 7px; }
+  .rc-reason  { display: flex; gap: 8px; align-items: flex-start; }
+  .rc-bullet  { color: var(--teal); font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+  .rc-text    { font-size: 12px; color: var(--slate); line-height: 1.5; }
+
+  /* SAMPLE BADGE */
+  .sample-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--amber); background: var(--amberGlow);
+    border: 1px solid rgba(255,152,0,0.3);
+    border-radius: 4px; padding: 2px 6px;
+  }
+
+  /* REFURB CARDS */
+  .refurb-card {
+    background: var(--navyCard); border: 1.5px solid var(--navyBorder);
+    border-radius: 12px; padding: 16px; margin-bottom: 10px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .refurb-card:hover { border-color: var(--grey); }
+  .refurb-card.selected { background: var(--tealGlow); border-color: var(--teal); }
+  .refurb-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .refurb-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    border-radius: 20px; padding: 3px 10px; border: 1px solid;
+  }
+  .badge-teal  { color: var(--teal);  background: var(--tealGlow);  border-color: rgba(0,191,165,0.3); }
+  .badge-amber { color: var(--amber); background: var(--amberGlow); border-color: rgba(255,152,0,0.3); }
+  .badge-grey  { color: var(--slate); background: rgba(176,190,197,0.1); border-color: rgba(176,190,197,0.2); }
+  .refurb-net { font-size: 20px; font-weight: 900; color: var(--white); }
+  .refurb-card.selected .refurb-net { color: var(--teal); }
+  .refurb-netlabel { font-size: 10px; color: var(--grey); }
+  .refurb-model { font-size: 13px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+  .refurb-specs { display: flex; gap: 12px; flex-wrap: wrap; }
+  .refurb-spec  { font-size: 11px; color: var(--grey); }
+  .refurb-spec::before { content: "● "; color: var(--teal); }
+
+  /* PRIMARY BUTTON */
+  .btn-primary {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--teal), var(--tealDim));
+    border: none; border-radius: 12px;
+    color: var(--navy); font-size: 15px; font-weight: 800;
+    cursor: pointer; margin-top: 16px;
+    letter-spacing: -0.01em;
+    transition: opacity 0.2s, transform 0.1s;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-primary:hover  { opacity: 0.92; }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary.inactive {
+    background: var(--greyDim) !important; color: var(--grey) !important; cursor: not-allowed !important; opacity: 1 !important;
+  }
+  .btn-amber {
+    background: linear-gradient(135deg, var(--amber), var(--amberDim));
+    color: var(--white);
+  }
+  .btn-green {
+    background: linear-gradient(135deg, var(--green), #00C853);
+    color: var(--navy);
+  }
+
+  /* BACK BUTTON */
+  .btn-back {
+    background: none; border: none; color: var(--grey);
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    cursor: pointer; padding: 0 0 18px 0; display: flex; align-items: center; gap: 5px;
+  }
+  .btn-back:hover { color: var(--slate); }
+
+  /* KEEP CARD */
+  .keep-card {
+    border: 1px dashed var(--greyBorder); border-radius: 10px;
+    padding: 12px 16px; text-align: center;
+    font-size: 12px; color: var(--grey); margin-top: 6px;
+  }
+
+  /* LOADER */
+  .loader-wrap { text-align: center; padding: 40px 0; }
+  .loader-ring-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 28px; }
+  .loader-ring {
+    width: 100px; height: 100px; border-radius: 50%;
+    position: absolute; top: 0; left: 0;
+    transition: background 0.5s ease;
+  }
+  .loader-inner {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: var(--navyMid);
+    position: absolute; top: 12px; left: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 900; color: var(--teal);
+  }
+  .loader-step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px;
+    border: 1px solid var(--navyBorder);
+    margin-bottom: 8px; background: var(--navyCard);
+    transition: all 0.4s;
+  }
+  .loader-step.done { background: var(--tealGlow); border-color: rgba(0,191,165,0.3); }
+  .loader-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--greyDim); display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; color: var(--white); flex-shrink: 0;
+  }
+  .loader-step.done .loader-num { background: var(--teal); color: var(--navy); }
+  .loader-text { font-size: 13px; color: var(--grey); transition: color 0.4s; }
+  .loader-step.done .loader-text { color: var(--white); }
+
+  /* TIMELINE */
+  .timeline { margin: 8px 0 16px; }
+  .tl-item  { display: flex; gap: 14px; padding-bottom: 16px; }
+  .tl-left  { display: flex; flex-direction: column; align-items: center; }
+  .tl-dot   {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; border: 2px solid;
+  }
+  .tl-line  { width: 2px; flex: 1; margin-top: 4px; }
+  .tl-day   { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 2px; }
+  .tl-event { font-size: 13px; color: var(--slate); line-height: 1.4; }
+
+  /* SLOT CARDS */
+  .slot-card {
+    background: var(--navyCard); border: 1.5px solid var(--navyBorder);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;
+    cursor: pointer; transition: all 0.18s;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .slot-card:hover { border-color: var(--grey); }
+  .slot-card.selected { background: var(--tealGlow); border-color: var(--teal); }
+  .slot-time { font-size: 14px; font-weight: 700; }
+  .slot-card.selected .slot-time { color: var(--teal); }
+  .slot-tag  { font-size: 10px; color: var(--teal); font-weight: 700; }
+
+  /* STORE CARD */
+  .store-card {
+    background: var(--navyCard); border: 1px solid var(--navyBorder);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+  }
+  .store-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .store-meta { font-size: 11px; color: var(--grey); }
+
+  /* SUMMARY TABLE */
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--navyBorder);
+  }
+  .summary-label { font-size: 12px; color: var(--grey); }
+  .summary-value { font-size: 12px; font-weight: 700; color: var(--white); text-align: right; max-width: 55%; }
+
+  /* CONFIRMATION */
+  .confirm-icon-wrap {
+    text-align: center; padding: 28px 0 20px;
+  }
+  .confirm-icon {
+    width: 68px; height: 68px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; margin: 0 auto 14px; border: 2px solid;
+  }
+  .confirm-pill { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .confirm-title { font-size: 20px; font-weight: 800; }
+
+  /* NOTIFY STRIP */
+  .notify-strip {
+    padding: 13px 16px; border-radius: 10px; font-size: 12px;
+    text-align: center; margin-top: 8px; color: var(--slate);
+  }
+
+  /* RESET */
+  .btn-ghost {
+    width: 100%; margin-top: 12px; padding: 12px;
+    background: transparent; border: 1px solid var(--navyBorder);
+    border-radius: 10px; color: var(--grey); font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--grey); }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 36px; text-align: center; font-size: 10px;
+    color: var(--greyDim); line-height: 1.7;
+  }
+
+  /* PAYOUT BOX */
+  .payout-box {
+    border-radius: 14px; padding: 20px; margin-bottom: 16px;
+    border: 1.5px solid;
+  }
+  .payout-label { font-size: 12px; color: var(--grey); margin-bottom: 6px; }
+  .payout-amount { font-size: 34px; font-weight: 900; letter-spacing: -0.03em; }
+  .payout-note   { font-size: 11px; color: var(--grey); margin-top: 5px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-icon">🔄</div>
+      <div>
+        <div class="brand-name">FixOrFlip</div>
+        <div class="brand-sub">BY CASHIFY</div>
+      </div>
+    </div>
+    <div id="stepLabel" class="step-label">Step 1 of 6</div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-seg" id="seg1"></div>
+    <div class="progress-seg" id="seg2"></div>
+    <div class="progress-seg" id="seg3"></div>
+    <div class="progress-seg" id="seg4"></div>
+    <div class="progress-seg" id="seg5"></div>
+    <div class="progress-seg" id="seg6"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 1 — SELECT PHONE
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen active" id="s1">
+    <div class="eyebrow">Step 1 of 6 — Your Phone</div>
+    <h2>Which phone are we looking at?</h2>
+    <p class="subtitle">We'll pull the current Cashify market value for your model.</p>
+
+    <div class="grid2">
+      <div class="card" data-id="iphone14" onclick="selectPhone(this)">
+        <div class="card-brand">APPLE</div>
+        <div class="card-title">iPhone 14</div>
+        <div class="card-sub">~18 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="iphone13" onclick="selectPhone(this)">
+        <div class="card-brand">APPLE</div>
+        <div class="card-title">iPhone 13</div>
+        <div class="card-sub">~24 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="iphone12" onclick="selectPhone(this)">
+        <div class="card-brand">APPLE</div>
+        <div class="card-title">iPhone 12</div>
+        <div class="card-sub">~36 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="s23" onclick="selectPhone(this)">
+        <div class="card-brand">SAMSUNG</div>
+        <div class="card-title">Galaxy S23</div>
+        <div class="card-sub">~20 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="s22" onclick="selectPhone(this)">
+        <div class="card-brand">SAMSUNG</div>
+        <div class="card-title">Galaxy S22</div>
+        <div class="card-sub">~32 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="op11" onclick="selectPhone(this)">
+        <div class="card-brand">ONEPLUS</div>
+        <div class="card-title">OnePlus 11</div>
+        <div class="card-sub">~22 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="pixel7" onclick="selectPhone(this)">
+        <div class="card-brand">GOOGLE</div>
+        <div class="card-title">Pixel 7</div>
+        <div class="card-sub">~28 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+      <div class="card" data-id="redminote12" onclick="selectPhone(this)">
+        <div class="card-brand">XIAOMI</div>
+        <div class="card-title">Redmi Note 12</div>
+        <div class="card-sub">~18 months old</div>
+        <div class="card-check">✓</div>
+      </div>
+    </div>
+
+    <div style="text-align:right; margin-bottom:4px;"><span class="sample-badge">SAMPLE DATA</span></div>
+    <button class="btn-primary" id="s1btn" onclick="goTo(2)">Continue →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 2 — DAMAGE TYPE
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s2">
+    <button class="btn-back" onclick="goTo(1)">← Back</button>
+    <div class="eyebrow">Step 2 of 6 — Damage</div>
+    <h2 id="s2title">What's wrong with your phone?</h2>
+    <p class="subtitle">We use this to calculate your repair cost and current sell value.</p>
+
+    <div class="damage-card" data-id="screen" data-cost="2800" data-drop="0.35" onclick="selectDamage(this)">
+      <div class="damage-icon">📱</div>
+      <div>
+        <div class="damage-name">Cracked Screen</div>
+        <div class="damage-cost">Typical repair: ₹2,800</div>
+      </div>
+      <div class="card-check" style="margin-left:auto">✓</div>
+    </div>
+    <div class="damage-card" data-id="battery" data-cost="800" data-drop="0.15" onclick="selectDamage(this)">
+      <div class="damage-icon">🔋</div>
+      <div>
+        <div class="damage-name">Battery Issue</div>
+        <div class="damage-cost">Typical repair: ₹800</div>
+      </div>
+      <div class="card-check" style="margin-left:auto">✓</div>
+    </div>
+    <div class="damage-card" data-id="water" data-cost="3500" data-drop="0.55" onclick="selectDamage(this)">
+      <div class="damage-icon">💧</div>
+      <div>
+        <div class="damage-name">Water Damage</div>
+        <div class="damage-cost">Typical repair: ₹3,500</div>
+      </div>
+      <div class="card-check" style="margin-left:auto">✓</div>
+    </div>
+    <div class="damage-card" data-id="slow" data-cost="500" data-drop="0.08" onclick="selectDamage(this)">
+      <div class="damage-icon">🐢</div>
+      <div>
+        <div class="damage-name">Phone Running Slow</div>
+        <div class="damage-cost">Typical fix: ₹500</div>
+      </div>
+      <div class="card-check" style="margin-left:auto">✓</div>
+    </div>
+    <div class="damage-card" data-id="multi" data-cost="4200" data-drop="0.65" onclick="selectDamage(this)">
+      <div class="damage-icon">⚠️</div>
+      <div>
+        <div class="damage-name">Multiple Issues</div>
+        <div class="damage-cost">Typical repair: ₹4,200+</div>
+      </div>
+      <div class="card-check" style="margin-left:auto">✓</div>
+    </div>
+
+    <div style="text-align:right; margin-top:4px; margin-bottom:4px;"><span class="sample-badge">SAMPLE DATA</span></div>
+    <button class="btn-primary" id="s2btn" onclick="goTo(3)">Continue →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 3 — URGENCY + BUDGET
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s3">
+    <button class="btn-back" onclick="goTo(2)">← Back</button>
+    <div class="eyebrow">Step 3 of 6 — Your Situation</div>
+    <h2>Two quick questions</h2>
+    <p class="subtitle">This helps us recommend what's actually practical for you right now.</p>
+
+    <div style="font-size:11px; font-weight:700; color:var(--teal); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px;">
+      How urgently do you need a working phone?
+    </div>
+    <div class="card" data-type="urgency" data-id="low" onclick="selectOption(this,'urgency')" style="padding:12px 14px; margin-bottom:8px;">
+      <div class="card-title">Can wait a week</div>
+      <div class="card-sub">Best value matters most</div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card" data-type="urgency" data-id="mid" onclick="selectOption(this,'urgency')" style="padding:12px 14px; margin-bottom:8px;">
+      <div class="card-title">Need in 2–3 days</div>
+      <div class="card-sub">Balancing speed and value</div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card" data-type="urgency" data-id="high" onclick="selectOption(this,'urgency')" style="padding:12px 14px; margin-bottom:16px;">
+      <div class="card-title">Need one today</div>
+      <div class="card-sub">Speed is the priority</div>
+      <div class="card-check">✓</div>
+    </div>
+
+    <div style="font-size:11px; font-weight:700; color:var(--teal); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:10px;">
+      How much extra can you spend?
+    </div>
+    <div class="card" data-type="budget" data-id="tight" data-max="3000" onclick="selectOption(this,'budget')" style="padding:12px 14px; margin-bottom:8px;">
+      <div class="card-title">As little as possible</div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card" data-type="budget" data-id="mid" data-max="7000" onclick="selectOption(this,'budget')" style="padding:12px 14px; margin-bottom:8px;">
+      <div class="card-title">Up to ₹7,000 extra</div>
+      <div class="card-check">✓</div>
+    </div>
+    <div class="card" data-type="budget" data-id="open" data-max="20000" onclick="selectOption(this,'budget')" style="padding:12px 14px; margin-bottom:4px;">
+      <div class="card-title">Open to upgrading</div>
+      <div class="card-check">✓</div>
+    </div>
+
+    <!-- OPTIONAL AI INPUT -->
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--navyBorder);">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+        <div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--tealDim));display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;">✦</div>
+        <div style="font-size:12px;font-weight:700;color:var(--teal);">Tell AI more (optional)</div>
+        <span style="font-size:10px;color:var(--grey);font-weight:500;">— get a personalised explanation</span>
+      </div>
+      <textarea id="aiContext" placeholder="Example: I need a phone urgently for work, I want the cheapest option, or camera quality matters to me." style="width:100%;background:var(--navyCard);border:1.5px solid var(--navyBorder);border-radius:10px;padding:12px 14px;color:var(--white);font-size:13px;font-family:'Inter',sans-serif;line-height:1.5;resize:none;height:90px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--navyBorder)'"></textarea>
+      <div style="font-size:11px;color:var(--grey);margin-top:5px;">Optional: Share what matters most to you for a more personalised recommendation.</div>
+    </div>
+
+    <button class="btn-primary" id="s3btn" onclick="runAnalysis()">Analyse my options →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 4 — AI LOADER
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s4">
+    <div class="loader-wrap">
+      <div class="loader-ring-wrap">
+        <div class="loader-ring" id="loaderRing"></div>
+        <div class="loader-inner" id="loaderPct">0%</div>
+      </div>
+      <h3 style="font-size:18px; font-weight:800; margin-bottom:20px;">FixOrFlip is thinking...</h3>
+      <div id="loaderSteps">
+        <div class="loader-step" id="ls1"><div class="loader-num">1</div><div class="loader-text">Checking Cashify repair costs for your model...</div></div>
+        <div class="loader-step" id="ls2"><div class="loader-num">2</div><div class="loader-text">Calculating your current damaged sell value...</div></div>
+        <div class="loader-step" id="ls3"><div class="loader-num">3</div><div class="loader-text">Matching refurbished upgrades to your budget...</div></div>
+        <div class="loader-step" id="ls4"><div class="loader-num">4</div><div class="loader-text">Running Repair Check analysis...</div></div>
+        <div class="loader-step" id="ls5"><div class="loader-num">✦</div><div class="loader-text">FixOrFlip AI generating personalised recommendation...</div></div>
+      </div>
+      <div style="margin-top:16px; font-size:11px; color:var(--grey);">
+        Using Cashify live pricing data &nbsp;·&nbsp; <span class="sample-badge">SAMPLE DATA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 5 — REPAIR CHECK + THREE OPTIONS
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s5">
+    <button class="btn-back" onclick="goTo(3)">← Back</button>
+    <div class="eyebrow">Step 4 of 6 — Your Analysis</div>
+    <h2>Here's what we found</h2>
+    <p class="subtitle">Based on your phone, damage type, and current Cashify pricing.</p>
+
+    <!-- AI INSIGHT PANEL -->
+    <div id="aiInsightPanel" style="display:none; background:linear-gradient(135deg,rgba(0,191,165,0.08),rgba(0,191,165,0.03)); border:1.5px solid rgba(0,191,165,0.25); border-radius:14px; padding:16px; margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--tealDim));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✦</div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:0.06em;text-transform:uppercase;">FixOrFlip AI · Personalised Insight</div>
+      </div>
+      <div id="aiInsightText" style="font-size:13px;color:var(--slate);line-height:1.6;"></div>
+      <div style="font-size:10px;color:var(--grey);margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,191,165,0.15);">Powered by Cashify FixOrFlip Intelligence Engine · Sample data for demonstration only.</div>
+    </div>
+
+    <!-- Repair Check -->
+    <div class="repair-check" id="repairCheck">
+      <div class="rc-header">
+        <div class="rc-label">⚡ Repair Check</div>
+        <span class="sample-badge">SAMPLE DATA</span>
+      </div>
+      <div class="rc-verdict">
+        <div class="rc-icon" id="rcIcon">✗</div>
+        <div>
+          <div class="rc-verdict-text" id="rcVerdict">Repair not recommended</div>
+          <div style="font-size:11px; color:var(--grey);" id="rcPhoneName">for your phone</div>
+        </div>
+      </div>
+      <div class="rc-reasons" id="rcReasons"></div>
+    </div>
+
+    <!-- Three Options -->
+    <div style="font-size:13px; font-weight:700; margin-bottom:12px;">Your three paths</div>
+
+    <div class="option-card" id="optRepair" onclick="chooseOption('repair')">
+      <div class="option-header">
+        <div class="option-left">
+          <div class="option-icon">🔧</div>
+          <div>
+            <div class="option-name">Repair It</div>
+            <div class="option-time" id="repairTime">Ready in 2 days</div>
+          </div>
+        </div>
+        <div>
+          <div class="option-amount" id="repairAmt">₹2,800</div>
+        </div>
+      </div>
+      <hr class="option-divider">
+      <div class="option-bestfor">Best for: You want to keep this phone long-term</div>
+    </div>
+
+    <div class="option-card" id="optSell" onclick="chooseOption('sell')">
+      <div class="option-header">
+        <div class="option-left">
+          <div class="option-icon">💰</div>
+          <div>
+            <div class="option-name">Sell It</div>
+            <div class="option-time">Same-day pickup available</div>
+          </div>
+        </div>
+        <div>
+          <div class="option-amount" id="sellAmt">₹7,400</div>
+        </div>
+      </div>
+      <hr class="option-divider">
+      <div class="option-bestfor">Best for: You need cash now, no upgrade planned</div>
+    </div>
+
+    <div class="option-card recommended" id="optFlip" onclick="chooseOption('flip')">
+      <div class="option-header">
+        <div class="option-left">
+          <div class="option-icon">🔄</div>
+          <div>
+            <div class="option-name">Upgrade via Cashify</div>
+            <div class="option-time">Delivered in 48 hours</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="option-amount" id="flipAmt">₹4,200 extra</div>
+          <span class="eyebrow" style="font-size:9px; padding:2px 8px;">Recommended</span>
+        </div>
+      </div>
+      <hr class="option-divider">
+      <div class="option-bestfor">Best for: Best value — sell damaged, get a better phone</div>
+    </div>
+
+    <div class="keep-card">
+      Not ready? Save this plan — your estimated value updates in 30 days.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 6A — UPGRADE OPTIONS (flip)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s6flip">
+    <button class="btn-back" onclick="goTo(5)">← Back</button>
+    <div class="eyebrow">Step 5 of 6 — Choose Upgrade</div>
+    <h2>Pick your upgrade</h2>
+    <p class="subtitle" id="flipSub">Net cost shown after selling your phone. <span class="sample-badge">SAMPLE DATA</span></p>
+
+    <div id="refurbCards"></div>
+
+    <button class="btn-primary" id="s6flipBtn" onclick="goTo(7)">Reserve this upgrade →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 6B — SELL OPTIONS
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s6sell">
+    <button class="btn-back" onclick="goTo(5)">← Back</button>
+    <div class="eyebrow amber">Step 5 of 6 — Schedule Pickup</div>
+    <h2>Choose your pickup slot</h2>
+    <p class="subtitle">Cashify agent comes to your door. <span class="sample-badge">SAMPLE DATA</span></p>
+
+    <div class="payout-box" style="background:var(--amberGlow); border-color:rgba(255,152,0,0.3);">
+      <div class="payout-label">Estimated payout for your damaged phone</div>
+      <div class="payout-amount" style="color:var(--amber);" id="sellPayoutAmt">₹7,400</div>
+      <div class="payout-note">Final amount confirmed by agent at pickup</div>
+    </div>
+
+    <div style="font-size:12px; font-weight:700; margin-bottom:10px;">Available slots today</div>
+    <div class="slot-card selected" onclick="selectSlot(this)">
+      <div class="slot-time">Today, 2–4 PM</div>
+      <div class="slot-tag">Fastest ⚡</div>
+    </div>
+    <div class="slot-card" onclick="selectSlot(this)">
+      <div class="slot-time">Today, 5–7 PM</div>
+      <div class="slot-tag"></div>
+    </div>
+    <div class="slot-card" onclick="selectSlot(this)">
+      <div class="slot-time">Tomorrow, 10 AM–12 PM</div>
+      <div class="slot-tag"></div>
+    </div>
+    <div class="slot-card" onclick="selectSlot(this)">
+      <div class="slot-time">Tomorrow, 2–4 PM</div>
+      <div class="slot-tag"></div>
+    </div>
+
+    <button class="btn-primary btn-amber" onclick="goTo(7)" style="margin-top:16px;">Confirm Pickup →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 6C — REPAIR BOOKING
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s6repair">
+    <button class="btn-back" onclick="goTo(5)">← Back</button>
+    <div class="eyebrow green">Step 5 of 6 — Book Repair</div>
+    <h2>Book your repair slot</h2>
+    <p class="subtitle">At the nearest Cashify store. <span class="sample-badge">SAMPLE DATA</span></p>
+
+    <div class="payout-box" style="background:var(--greenGlow); border-color:rgba(0,230,118,0.3);">
+      <div class="payout-label">Estimated repair cost</div>
+      <div class="payout-amount" style="color:var(--green);" id="repairPayAmt">₹2,800</div>
+      <div class="payout-note">Final amount confirmed after in-store inspection</div>
+    </div>
+
+    <div style="font-size:12px; font-weight:700; margin-bottom:10px;">Nearest Cashify Stores</div>
+    <div class="store-card">
+      <div class="store-name">Cashify Store — Sector 18, Noida</div>
+      <div class="store-meta">1.2 km away &nbsp;·&nbsp; Today 3 PM slot open &nbsp;·&nbsp; <span style="color:var(--green);">● Open now</span></div>
+    </div>
+    <div class="store-card">
+      <div class="store-name">Cashify Store — Connaught Place</div>
+      <div class="store-meta">4.8 km away &nbsp;·&nbsp; Tomorrow 11 AM slot open &nbsp;·&nbsp; <span style="color:var(--green);">● Open now</span></div>
+    </div>
+    <div style="font-size:10px; color:var(--grey); margin-top:4px; margin-bottom:4px;">[SAMPLE DATA — store locations for illustration only]</div>
+
+    <button class="btn-primary btn-green" onclick="goTo(7)" style="margin-top:16px;">Book Repair Slot →</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SCREEN 7 — CONFIRMATION
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="s7">
+    <div class="confirm-icon-wrap">
+      <div class="confirm-icon" id="confirmIcon" style="background:var(--tealGlow); border-color:var(--teal);">🔄</div>
+      <div class="confirm-pill" id="confirmPill" style="color:var(--teal);">FixOrFlip Plan Confirmed</div>
+      <div class="confirm-title" id="confirmTitle">Your upgrade is on its way</div>
+    </div>
+
+    <!-- Summary -->
+    <div class="repair-check" id="confirmSummary" style="margin-bottom:18px; padding:18px; border-radius:14px; border:1.5px solid var(--teal); background:var(--tealGlow);">
+      <div class="rc-header">
+        <div class="rc-label">Plan Summary</div>
+        <span class="sample-badge">SAMPLE DATA</span>
+      </div>
+      <div id="summaryRows"></div>
+    </div>
+
+    <!-- Timeline -->
+    <div style="font-size:12px; font-weight:700; margin-bottom:14px;">What happens next</div>
+    <div class="timeline" id="confirmTimeline"></div>
+
+    <div class="notify-strip" id="notifyStrip" style="background:rgba(0,191,165,0.08); border:1px solid rgba(0,191,165,0.2);">
+      🔔 You'll get SMS and WhatsApp updates at every step.
+    </div>
+
+    <button class="btn-ghost" onclick="resetApp()">← Start a new FixOrFlip</button>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    All prices are SAMPLE DATA for prototype demonstration only.<br>
+    Final values confirmed at pickup or store visit.<br>
+    Cashify FixOrFlip &nbsp;·&nbsp; AI-Assisted Prototype &nbsp;·&nbsp; Internship Submission 2025
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+const state = {
+  phone: null, phoneName: null,
+  damage: null, damageLabel: null, damageCost: 0, damageDrop: 0,
+  urgency: null, budget: null, budgetMax: 0,
+  choice: null,
+  damagedVal: 0, repairCost: 0, repairRatio: 0,
+  monthlyDrop: 0, repairWorth: '',
+  refurbs: [], chosenRefurb: null,
+  aiInsight: '',
+  currentScreen: 1,
+};
+
+// ═══════════════════════════════════════════════════════════
+// PHONE DATA [SAMPLE DATA]
+// ═══════════════════════════════════════════════════════════
+const BASE_VALUES = {
+  iphone14: 22000, iphone13: 14200, iphone12: 10500,
+  s23: 18500, s22: 13200, op11: 16000, pixel7: 14800, redminote12: 6800,
+};
+const PHONE_NAMES = {
+  iphone14:'iPhone 14', iphone13:'iPhone 13', iphone12:'iPhone 12',
+  s23:'Samsung S23', s22:'Samsung S22', op11:'OnePlus 11',
+  pixel7:'Pixel 7', redminote12:'Redmi Note 12',
+};
+const REFURB_OPTIONS = {
+  iphone14:[
+    {model:'iPhone 14, 128GB — Good',  price:20500, badge:'Best Match', badgeClass:'badge-teal',  grade:'Good',   warranty:'6 months'},
+    {model:'iPhone 14 Pro, 128GB — Fair',price:24800,badge:'Step Up',   badgeClass:'badge-amber', grade:'Fair',   warranty:'3 months'},
+    {model:'iPhone 13, 256GB — Superb',price:15200, badge:'Value Pick', badgeClass:'badge-grey',  grade:'Superb', warranty:'6 months'},
+  ],
+  iphone13:[
+    {model:'iPhone 13, 128GB — Good',  price:11600, badge:'Best Match', badgeClass:'badge-teal',  grade:'Good',   warranty:'6 months'},
+    {model:'iPhone 13, 256GB — Good',  price:13200, badge:'More Storage',badgeClass:'badge-amber',grade:'Good',   warranty:'6 months'},
+    {model:'iPhone 12, 128GB — Superb',price:9800,  badge:'Budget Pick',badgeClass:'badge-grey',  grade:'Superb', warranty:'6 months'},
+  ],
+  iphone12:[
+    {model:'iPhone 12, 128GB — Good',  price:9200,  badge:'Best Match', badgeClass:'badge-teal',  grade:'Good',   warranty:'6 months'},
+    {model:'iPhone 13, 128GB — Fair',  price:10400, badge:'Step Up',     badgeClass:'badge-amber', grade:'Fair',   warranty:'3 months'},
+    {model:'iPhone 11, 64GB — Superb', price:7600,  badge:'Budget Pick', badgeClass:'badge-grey',  grade:'Superb', warranty:'6 months'},
+  ],
+  s23:[
+    {model:'Samsung S23, 128GB — Good',price:17200, badge:'Best Match', badgeClass:'badge-teal',  grade:'Good',   warranty:'6 months'},
+    {model:'Samsung S23+, 256GB — Fair',price:21500,badge:'Step Up',    badgeClass:'badge-amber', grade:'Fair',   warranty:'3 months'},
+    {model:'Samsung S22, 128GB — Superb',price:12800,badge:'Budget Pick',badgeClass:'badge-grey', grade:'Superb', warranty:'6 months'},
+  ],
+  default:[
+    {model:'Refurbished Option A — Good', price:12000, badge:'Best Match', badgeClass:'badge-teal', grade:'Good',  warranty:'6 months'},
+    {model:'Refurbished Option B — Good', price:14500, badge:'Step Up',    badgeClass:'badge-amber',grade:'Good',  warranty:'6 months'},
+    {model:'Refurbished Option C — Superb',price:9500, badge:'Budget Pick',badgeClass:'badge-grey', grade:'Superb',warranty:'6 months'},
+  ],
+};
+
+function fmt(n) {
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+// ═══════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function showScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const map = {1:'s1',2:'s2',3:'s3',4:'s4',5:'s5',
+                61:'s6flip',62:'s6sell',63:'s6repair',7:'s7'};
+  const id = map[n] || ('s'+n);
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+
+  // progress
+  const prog = n === 61||n===62||n===63 ? 5 : n === 7 ? 6 : Math.min(n,6);
+  for (let i=1; i<=6; i++) {
+    const seg = document.getElementById('seg'+i);
+    if (seg) seg.classList.toggle('active', i <= prog);
+  }
+
+  // step label
+  const stepEl = document.getElementById('stepLabel');
+  if (n === 7) { stepEl.textContent = 'Complete ✓'; }
+  else { stepEl.textContent = 'Step ' + Math.min(prog,6) + ' of 6'; }
+
+  state.currentScreen = n;
+  window.scrollTo(0,0);
+}
+
+function goTo(n) { showScreen(n); }
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 1 — PHONE SELECTION
+// ═══════════════════════════════════════════════════════════
+function selectPhone(el) {
+  document.querySelectorAll('#s1 .card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.phone     = el.dataset.id;
+  state.phoneName = PHONE_NAMES[state.phone];
+  document.getElementById('s1btn').classList.remove('inactive');
+  document.getElementById('s2title').textContent = "What's wrong with your " + state.phoneName + "?";
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 2 — DAMAGE
+// ═══════════════════════════════════════════════════════════
+function selectDamage(el) {
+  document.querySelectorAll('.damage-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.damage      = el.dataset.id;
+  state.damageLabel = el.querySelector('.damage-name').textContent;
+  state.damageCost  = parseInt(el.dataset.cost);
+  state.damageDrop  = parseFloat(el.dataset.drop);
+  document.getElementById('s2btn').classList.remove('inactive');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 3 — URGENCY + BUDGET
+// ═══════════════════════════════════════════════════════════
+function selectOption(el, type) {
+  document.querySelectorAll('[data-type="'+type+'"]').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  if (type === 'urgency') state.urgency = el.dataset.id;
+  if (type === 'budget')  { state.budget = el.dataset.id; state.budgetMax = parseInt(el.dataset.max); }
+  if (state.urgency && state.budget) document.getElementById('s3btn').classList.remove('inactive');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 4 — LOADER → CALCULATE
+// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// OFFLINE AI SIMULATION ENGINE — no API, no internet needed
+// ═══════════════════════════════════════════════════════════
+const AI_RULES = [
+  {
+    id: 'camera',
+    keywords: ['camera','photo','photos','photography','video','travel','reels','instagram','content','picture','pictures','creator'],
+    insight: 'Since camera quality matters to you, upgrading may give you a more meaningful improvement than spending on a repair — especially if your current device is already ageing.',
+  },
+  {
+    id: 'gaming',
+    keywords: ['gaming','game','games','gamer','performance','lag','slow','speed','processor','heavy use','pubg','bgmi','cod','fps'],
+    insight: 'Since performance matters to you, repairing the current device may not solve longer-term speed, battery, or performance limitations. Upgrading may provide a better experience.',
+  },
+  {
+    id: 'budget',
+    keywords: ['budget','cheap','cheaper','money','save','saving','affordable','low cost','less money','student','expensive','cost'],
+    insight: 'Since keeping costs low matters to you, this recommendation prioritises the option with the lowest total out-of-pocket cost.',
+  },
+  {
+    id: 'urgency',
+    keywords: ['urgent','urgently','today','immediately','fast','quickly','work','office','college','exam','business','important','asap','need now'],
+    insight: 'Since you need a working phone quickly, this recommendation gives more weight to the fastest available option.',
+  },
+  {
+    id: 'battery',
+    keywords: ['battery','charging','charge','daily','calls','whatsapp','basic','normal use','long battery','drain','power'],
+    insight: 'Since reliable daily use and battery matter to you, the recommendation considers whether a repair will give you enough usable life before you spend more money.',
+  },
+];
+
+const AI_FALLBACK = 'Based on your phone condition, urgency, and budget, this recommendation gives you the most practical next step. Compare repair, selling, and upgrading before deciding.';
+
+function runOfflineAI(userText) {
+  // Sanitise — treat as plain text only, never execute
+  const input = String(userText || '').toLowerCase().trim();
+
+  // Empty or blank — show fallback
+  if (!input) return AI_FALLBACK;
+
+  // Match each rule category
+  const matched = AI_RULES.filter(rule =>
+    rule.keywords.some(kw => input.includes(kw))
+  );
+
+  // No match — fallback
+  if (matched.length === 0) return AI_FALLBACK;
+
+  // Cap at 2 insights for clean display
+  return matched.slice(0, 2).map(r => r.insight).join(' ');
+}
+
+function runAnalysis() {
+  if (document.getElementById('s3btn').classList.contains('inactive')) return;
+  showScreen(4);
+  calculate();
+
+  const aiContext = (document.getElementById('aiContext')?.value || '').trim();
+  const ids = ['ls1','ls2','ls3','ls4'];
+  const ring = document.getElementById('loaderRing');
+  const pct  = document.getElementById('loaderPct');
+
+  let step = 0;
+  const interval = setInterval(() => {
+    step++;
+    const p = Math.round((step / 5) * 100);
+    if (ids[step-1]) document.getElementById(ids[step-1]).classList.add('done');
+    ring.style.background = `conic-gradient(var(--teal) ${p*3.6}deg, var(--greyDim) 0deg)`;
+    pct.textContent = p + '%';
+
+    if (step === ids.length) {
+      // Step 5 — simulate AI thinking (instant, offline)
+      const ls5 = document.getElementById('ls5');
+      if (ls5) ls5.querySelector('.loader-text').textContent = 'FixOrFlip AI generating personalised recommendation...';
+    }
+
+    if (step >= 5) {
+      clearInterval(interval);
+      // Run offline AI engine
+      state.aiInsight = runOfflineAI(aiContext);
+      // Complete loader
+      const ls5 = document.getElementById('ls5');
+      if (ls5) { ls5.classList.add('done'); ls5.querySelector('.loader-num').textContent = '✓'; }
+      ring.style.background = `conic-gradient(var(--teal) 360deg, var(--greyDim) 0deg)`;
+      pct.textContent = '100%';
+      setTimeout(() => buildScreen5(), 500);
+    }
+  }, 550);
+}
+
+function calculate() {
+  const base     = BASE_VALUES[state.phone] || 12000;
+  const damaged  = Math.round(base * (1 - state.damageDrop));
+  const repair   = state.damageCost;
+  const ratio    = Math.round((repair / damaged) * 100);
+  const monthly  = Math.round(base * 0.04);
+  const worth    = ratio < 25 ? 'strong' : ratio < 45 ? 'marginal' : 'poor';
+  const refurbs  = REFURB_OPTIONS[state.phone] || REFURB_OPTIONS.default;
+
+  state.damagedVal   = damaged;
+  state.repairCost   = repair;
+  state.repairRatio  = ratio;
+  state.monthlyDrop  = monthly;
+  state.repairWorth  = worth;
+  state.refurbs      = refurbs;
+  state.chosenRefurb = refurbs[0];
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 5 — BUILD DYNAMICALLY
+// ═══════════════════════════════════════════════════════════
+function buildScreen5() {
+  const {damagedVal, repairCost, repairRatio, monthlyDrop, repairWorth, refurbs, phoneName, damageLabel, aiInsight} = state;
+  const bestRefurb = refurbs[0];
+  const netFlip    = bestRefurb.price - damagedVal;
+
+  // AI Insight Panel — always show since offline engine always returns a string
+  const aiPanel = document.getElementById('aiInsightPanel');
+  const aiText  = document.getElementById('aiInsightText');
+  aiText.textContent = aiInsight || AI_FALLBACK;
+  aiPanel.style.display = 'block';
+
+  // Repair Check
+  const rc = document.getElementById('repairCheck');
+  rc.className = 'repair-check ' + repairWorth;
+
+  const verdicts = {
+    poor:     { icon:'✗', text:'Repair not recommended', label:'Not recommended' },
+    marginal: { icon:'~', text:'Repair has marginal value', label:'Worth checking' },
+    strong:   { icon:'✓', text:'Repair is worth it', label:'Good option' },
+  };
+  const v = verdicts[repairWorth];
+  document.getElementById('rcIcon').textContent    = v.icon;
+  document.getElementById('rcVerdict').textContent  = v.text;
+  document.getElementById('rcPhoneName').textContent= 'for your ' + phoneName;
+
+  const reasons = [
+    `Repair cost (${fmt(repairCost)}) is ${repairRatio}% of your phone's current damaged value`,
+    `Your phone loses ~${fmt(monthlyDrop)}/month in market value even when repaired`,
+    netFlip > 0
+      ? `A refurbished ${bestRefurb.model.split(',')[0]} costs just ${fmt(netFlip)} extra after selling this phone`
+      : `Selling this phone earns enough to fully cover a refurbished upgrade`,
+  ];
+  document.getElementById('rcReasons').innerHTML = reasons.map(r =>
+    `<div class="rc-reason"><div class="rc-bullet">•</div><div class="rc-text">${r}</div></div>`
+  ).join('');
+
+  // Option amounts
+  document.getElementById('repairAmt').textContent = fmt(repairCost);
+  document.getElementById('sellAmt').textContent   = fmt(damagedVal) + ' payout';
+  document.getElementById('flipAmt').textContent   = netFlip > 0 ? fmt(netFlip)+' extra' : fmt(Math.abs(netFlip))+' back';
+  document.getElementById('repairTime').textContent = damageLabel === 'Cracked Screen' ? 'Ready in 2 days' : 'Ready in 1–3 days';
+
+  // Recommendation highlight
+  const rec = repairWorth === 'poor' ? 'flip' : repairWorth === 'strong' ? 'repair' : 'flip';
+  document.getElementById('optRepair').classList.toggle('recommended', rec === 'repair');
+  document.getElementById('optSell').classList.toggle('recommended',   rec === 'sell');
+  document.getElementById('optFlip').classList.toggle('recommended',   rec === 'flip');
+
+  // add/remove recommended pill
+  ['optRepair','optSell','optFlip'].forEach(id => {
+    const card = document.getElementById(id);
+    const existing = card.querySelector('.eyebrow');
+    if (existing) existing.remove();
+    if (card.classList.contains('recommended')) {
+      const nameEl = card.querySelector('.option-name');
+      const pill = document.createElement('span');
+      pill.className = 'eyebrow'; pill.style.cssText = 'font-size:9px;padding:2px 8px;margin-top:3px;';
+      pill.textContent = 'Recommended';
+      nameEl.after(pill);
+    }
+  });
+
+  showScreen(5);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 5 — CHOOSE OPTION
+// ═══════════════════════════════════════════════════════════
+function chooseOption(choice) {
+  state.choice = choice;
+  if (choice === 'flip') {
+    buildRefurbCards();
+    document.getElementById('flipSub').innerHTML =
+      `Net cost after selling your phone for <strong>${fmt(state.damagedVal)}</strong>. <span class="sample-badge">SAMPLE DATA</span>`;
+    showScreen(61);
+  } else if (choice === 'sell') {
+    document.getElementById('sellPayoutAmt').textContent = fmt(state.damagedVal);
+    showScreen(62);
+  } else {
+    document.getElementById('repairPayAmt').textContent = fmt(state.repairCost);
+    showScreen(63);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 6A — REFURB CARDS
+// ═══════════════════════════════════════════════════════════
+function buildRefurbCards() {
+  const container = document.getElementById('refurbCards');
+  container.innerHTML = '';
+  state.refurbs.forEach((r, i) => {
+    const net = r.price - state.damagedVal;
+    const netStr = net <= 0 ? 'Free upgrade' : fmt(net) + ' extra';
+    const div = document.createElement('div');
+    div.className = 'refurb-card' + (i === 0 ? ' selected' : '');
+    div.onclick = () => {
+      document.querySelectorAll('.refurb-card').forEach(c => c.classList.remove('selected'));
+      div.classList.add('selected');
+      state.chosenRefurb = r;
+    };
+    div.innerHTML = `
+      <div class="refurb-top">
+        <span class="refurb-badge ${r.badgeClass}">${r.badge}</span>
+        <div style="text-align:right">
+          <div class="refurb-net">${netStr}</div>
+          <div class="refurb-netlabel">net cost after sell</div>
+        </div>
+      </div>
+      <div class="refurb-model">${r.model}</div>
+      <div class="refurb-specs">
+        <span class="refurb-spec">${r.grade} Grade</span>
+        <span class="refurb-spec">${r.warranty} warranty</span>
+        <span class="refurb-spec">40-pt QC</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// SLOT SELECTION
+// ═══════════════════════════════════════════════════════════
+function selectSlot(el) {
+  document.querySelectorAll('.slot-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN 7 — CONFIRMATION
+// ═══════════════════════════════════════════════════════════
+function buildConfirmation() {
+  const {choice, phoneName, damageLabel, damagedVal, repairCost, chosenRefurb} = state;
+
+  const configs = {
+    flip: {
+      icon:'🔄', iconBg:'var(--tealGlow)', iconBorder:'var(--teal)',
+      pill:'FixOrFlip Plan Confirmed', pillColor:'var(--teal)',
+      title:'Your upgrade is on its way',
+      summaryBg:'var(--tealGlow)', summaryBorder:'var(--teal)',
+      tlColor:'var(--teal)',
+      rows: [
+        ['Your phone',    `${phoneName} (${damageLabel})`],
+        ['You sell for',  fmt(damagedVal)],
+        ['Upgrade',       chosenRefurb ? chosenRefurb.model : '—'],
+        ['Net you pay',   chosenRefurb ? fmt(chosenRefurb.price - damagedVal) : '—'],
+        ['Delivery',      'Within 48 hours of sell confirmation'],
+      ],
+      timeline: [
+        ['Today',   'Pickup scheduled for your damaged phone'],
+        ['Tomorrow','Agent collects phone, sell value confirmed'],
+        ['Day 3',   'Refurbished phone dispatched from Cashify'],
+        ['Day 4–5', 'Delivered to your door'],
+      ],
+    },
+    sell: {
+      icon:'💰', iconBg:'var(--amberGlow)', iconBorder:'var(--amber)',
+      pill:'Pickup Confirmed', pillColor:'var(--amber)',
+      title:"We'll be there today",
+      summaryBg:'var(--amberGlow)', summaryBorder:'var(--amber)',
+      tlColor:'var(--amber)',
+      rows: [
+        ['Your phone',   `${phoneName} (${damageLabel})`],
+        ['Est. payout',  fmt(damagedVal)],
+        ['Pickup slot',  'Today 2–4 PM'],
+        ['Payment',      'Within 24 hours of pickup'],
+      ],
+      timeline: [
+        ['Today',     'Pickup slot booked'],
+        ['Today',     'Cashify agent arrives at your door'],
+        ['Within 24h','Payment transferred to your account'],
+      ],
+    },
+    repair: {
+      icon:'🔧', iconBg:'var(--greenGlow)', iconBorder:'var(--green)',
+      pill:'Repair Slot Booked', pillColor:'var(--green)',
+      title:'Your repair is confirmed',
+      summaryBg:'var(--greenGlow)', summaryBorder:'var(--green)',
+      tlColor:'var(--green)',
+      rows: [
+        ['Your phone',   `${phoneName}`],
+        ['Issue',         damageLabel],
+        ['Est. cost',    fmt(repairCost)],
+        ['Store',        'Cashify — Sector 18, Noida'],
+        ['Slot',         'Today 3 PM'],
+      ],
+      timeline: [
+        ['Today',    'Repair slot booked at Cashify store'],
+        ['Day 1',    'Device inspection and repair begins'],
+        ['Day 2–3',  'Repair complete, phone ready to collect'],
+      ],
+    },
+  };
+
+  const c = configs[choice];
+
+  // Icon
+  const icon = document.getElementById('confirmIcon');
+  icon.textContent = c.icon;
+  icon.style.background = c.iconBg;
+  icon.style.borderColor = c.iconBorder;
+
+  // Pill + title
+  const pill = document.getElementById('confirmPill');
+  pill.textContent = c.pill; pill.style.color = c.tlColor;
+  document.getElementById('confirmTitle').textContent = c.title;
+
+  // Summary
+  const sumDiv = document.getElementById('confirmSummary');
+  sumDiv.style.background = c.summaryBg;
+  sumDiv.style.borderColor = c.summaryBorder;
+  document.getElementById('summaryRows').innerHTML = c.rows.map(([l,v]) =>
+    `<div class="summary-row"><span class="summary-label">${l}</span><span class="summary-value">${v}</span></div>`
+  ).join('');
+
+  // Timeline
+  const tl = document.getElementById('confirmTimeline');
+  tl.innerHTML = c.timeline.map(([day, ev], i, arr) => `
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-dot" style="background:${c.tlColor}20; border-color:${c.tlColor}; color:${c.tlColor};">${i+1}</div>
+        ${i < arr.length-1 ? `<div class="tl-line" style="background:${c.tlColor}30;"></div>` : ''}
+      </div>
+      <div style="padding-top:4px;">
+        <div class="tl-day" style="color:${c.tlColor};">${day}</div>
+        <div class="tl-event">${ev}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Notify strip
+  const ns = document.getElementById('notifyStrip');
+  ns.style.background = c.iconBg;
+  ns.style.borderColor = c.iconBorder.replace(')',',0.25)').replace('var(','rgba(').replace('--teal','0,191,165').replace('--amber','255,152,0').replace('--green','0,230,118');
+
+  showScreen(7);
+}
+
+// Override goTo(7) to build confirmation first
+const _goTo = goTo;
+window.goTo = function(n) {
+  // Guard: if button is inactive, do nothing
+  if (n === 2 && document.getElementById('s1btn').classList.contains('inactive')) return;
+  if (n === 3 && document.getElementById('s2btn').classList.contains('inactive')) return;
+  if (n === 7) { buildConfirmation(); return; }
+  _goTo(n);
+};
+
+// ═══════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════
+function resetApp() {
+  Object.assign(state, {
+    phone:null, phoneName:null, damage:null, damageLabel:null, damageCost:0, damageDrop:0,
+    urgency:null, budget:null, budgetMax:0, choice:null,
+    damagedVal:0, repairCost:0, repairRatio:0, monthlyDrop:0, repairWorth:'',
+    refurbs:[], chosenRefurb:null, aiInsight:'',
+  });
+  document.querySelectorAll('.card, .damage-card, .refurb-card, .slot-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('s1btn').classList.add('inactive');
+  document.getElementById('s2btn').classList.add('inactive');
+  document.getElementById('s3btn').classList.add('inactive');
+  const ta = document.getElementById('aiContext');
+  if (ta) ta.value = '';
+  // reset loader
+  document.querySelectorAll('.loader-step').forEach(s => {
+    s.classList.remove('done');
+    if (s.id === 'ls5') s.querySelector('.loader-num').textContent = '✦';
+  });
+  document.getElementById('loaderRing').style.background = `conic-gradient(var(--teal) 0deg, var(--greyDim) 0deg)`;
+  document.getElementById('loaderPct').textContent = '0%';
+  document.getElementById('aiInsightPanel').style.display = 'none';
+  showScreen(1);
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+showScreen(1);
+// Set initial inactive state via JS (avoids disabled attr blocking onclick)
+document.getElementById('s1btn').classList.add('inactive');
+document.getElementById('s2btn').classList.add('inactive');
+document.getElementById('s3btn').classList.add('inactive');
+</script>
+</body>
+</html>
